@@ -6,6 +6,7 @@ import _ from 'lodash';
 import BigButton from '../components/buttons/BigButton.tsx';
 import classNames from '../utils/class-names.ts';
 import { Bars4Icon } from '@heroicons/react/24/solid';
+import BeatComponent, { SupportedSubdivisions } from './BeatComponent.tsx';
 
 function Sequencer(props: { song?: Song }) {
   const [position, setPosition] = useState<SequencerPosition>([0, 0, 0]);
@@ -16,19 +17,64 @@ function Sequencer(props: { song?: Song }) {
   useEffect(() => {
     const osc = new Tone.Oscillator().toDestination();
 
-    // repeated event every 8th note
-    const id = Tone.Transport.scheduleRepeat((time) => {
-      setPosition(() => {
-        const p = Tone.Transport.position as BarsBeatsSixteenths;
-        return p.split(':').map((v) => Math.floor(parseFloat(v))) as [number, number, number];
-      });
+    Tone.Transport.scheduleRepeat(
+      (time) => {
+        osc.start(time).stop(time + 0.05);
 
-      // use the callback time to schedule events
-      osc.start(time).stop(time + 0.1);
-    }, '4n');
+        setPosition(() => {
+          const p = Tone.Transport.position as BarsBeatsSixteenths;
+          return p.split(':').map((v) => parseFloat(v)) as [number, number, number];
+        });
+      },
+      '2n',
+      0,
+      '2n',
+    );
+
+    Tone.Transport.scheduleRepeat(
+      (time) => {
+        osc.start(time).stop(time + 0.05);
+
+        setPosition(() => {
+          const p = Tone.Transport.position as BarsBeatsSixteenths;
+          return p.split(':').map((v) => parseFloat(v)) as [number, number, number];
+        });
+      },
+      '8n',
+      { '4n': 1 },
+      '4n',
+    );
+
+    Tone.Transport.scheduleRepeat(
+      (time) => {
+        osc.start(time).stop(time + 0.05);
+
+        setPosition(() => {
+          const p = Tone.Transport.position as BarsBeatsSixteenths;
+          return p.split(':').map((v) => parseFloat(v)) as [number, number, number];
+        });
+      },
+      '16n',
+      { '4n': 2 },
+      '4n',
+    );
+
+    Tone.Transport.scheduleRepeat(
+      (time) => {
+        osc.start(time).stop(time + 0.05);
+
+        setPosition(() => {
+          const p = Tone.Transport.position as BarsBeatsSixteenths;
+          return p.split(':').map((v) => parseFloat(v)) as [number, number, number];
+        });
+      },
+      '32n',
+      { '4n': 3 },
+      '4n',
+    );
 
     return () => {
-      Tone.Transport.clear(id);
+      Tone.Transport.stop();
     };
   }, []);
 
@@ -39,45 +85,11 @@ function Sequencer(props: { song?: Song }) {
         <BigButton onClick={() => Tone.Transport.stop()}>Stop</BigButton>
       </div>
       <div>{position.join(':')}</div>
-      <div className="my-5 grow overflow-hidden rounded-md border border-gray-lightest md:rounded-lg">
-        <table className="min-h-full min-w-full table-auto border-collapse">
-          <thead>
-            <tr className="bg-gray-700 text-gray-300">
-              <th colSpan={4} className="border-r border-gray-800 px-3 py-2 text-left">
-                Bar
-              </th>
-            </tr>
-            <tr className="bg-gray-200 text-gray-900">
-              {_.range(numSubdivisions).map((i) => (
-                <th
-                  key={i}
-                  className={classNames(
-                    'group border-r border-gray-800 px-3 py-2 text-sm',
-                    beat === i && 'bg-gray-800 text-gray-200',
-                  )}
-                >
-                  <div className="flex items-center justify-center gap-1 ">
-                    <span>{i}</span>
-                    <button className="rounded-md bg-gray-300 p-1 text-gray-900 opacity-0 hover:bg-gray-500 focus:opacity-100 group-hover:opacity-100">
-                      <Bars4Icon className="aspect-square h-5 rotate-90" />
-                    </button>
-                  </div>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="h-full">
-            {_.range(numTracks).map((track) => (
-              <tr key={track} className="border-b border-gray-800">
-                {_.range(numSubdivisions).map((subdivision) => (
-                  <td key={subdivision} className="border-r border-gray-800 px-3 py-2 text-center">
-                    <input type="checkbox" />
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="my-5 grid grow grid-cols-4 gap-1 overflow-hidden rounded-md border border-gray-950 md:rounded-lg">
+        <BeatComponent position={position} index={0} size={4} />
+        <BeatComponent position={position} index={1} size={8} />
+        <BeatComponent position={position} index={2} size={16} />
+        <BeatComponent position={position} index={3} size={32} />
       </div>
     </div>
   );
