@@ -1,5 +1,5 @@
 import { FallbackProps } from 'react-error-boundary';
-import { ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { ExclamationTriangleIcon } from '@heroicons/react/24/solid';
 import RenderTextWithBoundaries from './RenderTextWithBoundaries';
 import { Transition } from '@headlessui/react';
 import { transitions } from '../utils/TransitionHelpers';
@@ -24,12 +24,12 @@ export function ErrorCard({ error, children }: { error?: Partial<AnyError>; chil
 
   return (
     <Transition show={true} appear={true} {...transitions.basic}>
-      <div className="m-5 rounded-lg border-4 border-severity-danger p-5 text-severity-danger">
-        <div className="flex items-center gap-3 px-2">
-          <ExclamationTriangleIcon className="h-6 w-6 shrink-0 text-severity-danger" />
+      <div className="rounded-lg border-4 border-red-600 bg-red-800/25 p-5">
+        <div className="flex items-center gap-2 text-red-600">
+          <ExclamationTriangleIcon className="h-6 w-6 shrink-0" />
           <h1 className="text-xl font-bold">{errorName}</h1>
         </div>
-        <p className="text-gray-100">
+        <p className="text-gray-400">
           <RenderTextWithBoundaries
             text={error?.message ?? fallbackMessage}
             boundaries={['"', '`', "'"]}
