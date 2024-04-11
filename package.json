@@ -11,13 +11,14 @@
     "tailwind": "npx tailwindcss -i ./src/index.css -o ./src/out.css --watch"
   },
   "dependencies": {
+    "@floating-ui/react": "^0.26.12",
+    "@headlessui-float/react": "^0.13.3",
     "@headlessui/react": "^1.7.18",
     "@headlessui/tailwindcss": "^0.2.0",
     "@heroicons/react": "^2.0.12",
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/line-clamp": "^0.4.2",
     "@tailwindcss/typography": "^0.5.7",
-    "react-router-dom": "^6.21.3",
     "@types/d3": "^7.4.3",
     "@types/date-fns": "^2.6.0",
     "@types/lodash": "^4.14.202",
@@ -25,12 +26,14 @@
     "colorjs.io": "^0.4.5",
     "d3": "^7.8.5",
     "date-fns": "^3.4.0",
+    "fuse.js": "^7.0.0",
     "heroicons": "^2.1.1",
     "lodash": "^4.17.21",
     "postcss": "^8.4.38",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-error-boundary": "^4.0.13",
+    "react-router-dom": "^6.21.3",
     "tone": "^14.8.49"
   },
   "devDependencies": {
