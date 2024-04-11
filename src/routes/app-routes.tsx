@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import AppHome from './AppHome.tsx';
 import { ErrorCard } from '../components/ErrorPanel.tsx';
-import Sequencer from '../sequencer/Sequencer.tsx';
+import AppDemo from './AppDemo.tsx';
 
 const appRoutes = createBrowserRouter([
   {
@@ -10,7 +10,7 @@ const appRoutes = createBrowserRouter([
   },
   {
     path: 'demo',
-    element: <Sequencer />,
+    element: <AppDemo />,
   },
   {
     path: '*', // Catch-all 404 route
