@@ -73,11 +73,13 @@ function SequencerGrid(props: SequencerGridProps) {
                   setGrid(newGrid);
                 }}
                 className={classNames(
-                  'h-full w-full rounded-lg p-5',
-                  block.isActive ? 'bg-green-600 hover:bg-green-600/50' : 'bg-gray-600/50 hover:bg-gray-600',
+                  'h-full w-full rounded-lg p-5 transition-all duration-100',
+                  block.isActive
+                    ? 'bg-green-600 hover:bg-green-600/50'
+                    : 'bg-gray-600/50 text-transparent hover:bg-gray-600 hover:text-white',
                 )}
               >
-                {block.note}
+                <span>{block.note}</span>
               </button>
             ))}
           </div>
