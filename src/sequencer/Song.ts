@@ -22,7 +22,7 @@ export interface GridScheduleSettings<Options extends InstrumentOptions> {
  * @param settings Object that specifies the grid, instruments, and BPM.
  * @throws MisalignedInstrumentError if the number of rows in the grid does not match the number of instruments.
  */
-export function scheduleGrid<Options extends InstrumentOptions>(settings: GridScheduleSettings<Options>) {
+export function scheduleGrid<Options extends InstrumentOptions>(settings: GridScheduleSettings<Options>): number {
   let beat = 0;
 
   if (settings.grid.length !== settings.instruments.length) {
@@ -48,7 +48,7 @@ export function scheduleGrid<Options extends InstrumentOptions>(settings: GridSc
   }
 
   Tone.Transport.bpm.value = bpm;
-  Tone.Transport.scheduleRepeat(repeat, noteDuration);
+  return Tone.Transport.scheduleRepeat(repeat, noteDuration);
 }
 
 class MisalignedInstrumentError extends Error {
