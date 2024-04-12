@@ -1,6 +1,11 @@
 import classNames from '../../utils/class-names.ts';
+import { MouseEvent } from 'react';
 
-function BigButton(props: { className?: string; children: React.ReactNode; onClick?: () => void }) {
+function BigButton(props: {
+  className?: string;
+  children: React.ReactNode;
+  onClick?: (e: MouseEvent<HTMLButtonElement>) => void;
+}) {
   return (
     <button
       onClick={props.onClick}
