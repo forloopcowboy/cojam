@@ -30,10 +30,15 @@ export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackStat
     {} as TrackCache<NoteGrid<string | Note>>,
   );
 
-  // If notes have changed update grid rows
-  // and update the instrument instances
+  // If notes or settings have changed, propagate the changes to the state
   const hasChanged = tracks
-    .flatMap((track) => (track.type === 'synth' ? track.notes : Object.keys(track.sources)))
+    .flatMap((track) =>
+      track.type === 'synth'
+        ? track.notes
+        : Object.entries(track.sources)
+            .flat()
+            .concat(Object.entries(track.settings).flatMap(([k, v]) => [k, String(v)])),
+    )
     .toString();
 
   const state = useMemo(
