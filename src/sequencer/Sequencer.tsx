@@ -10,7 +10,7 @@ import snare from '../assets/audio/demo-drums/demo_drums_snare.wav';
 import hihat from '../assets/audio/demo-drums/demo_drums_hi_hat.wav';
 import { getNotes } from './track/TrackInitializationSettings.ts';
 import { buildScale, scales } from './Scales.ts';
-import { sortNotes } from '../utils/note-order.ts';
+import { shift, sortNotes } from '../utils/note-order.ts';
 import { AnyTrackSettings } from './track/track.index.ts';
 import { scheduleGrid } from './Song.ts';
 
@@ -24,7 +24,7 @@ function Sequencer() {
       id: 'square8 synth',
       name: 'square8 synth',
       type: 'synth',
-      instrument: { oscillator: { type: 'square8' } },
+      instrument: { oscillator: { type: 'square8', mute: false }, volume: -10 },
       notes: scale,
     },
     'demo drums': {
@@ -35,6 +35,10 @@ function Sequencer() {
         kick: kick,
         snare: snare,
         hihat: hihat,
+      },
+      settings: {
+        volume: -10,
+        mute: false,
       },
     },
     'custom synth': {
@@ -52,7 +56,7 @@ function Sequencer() {
           type: 'custom',
         },
       },
-      notes: scale,
+      notes: shift(-12, ...scale),
     },
   });
 
@@ -92,6 +96,7 @@ function Sequencer() {
         {globalTrackState.tracks.map((track, idx) => (
           <SequencerGrid
             key={idx}
+            trackId={track.trackId}
             name={trackSettings[track.trackId].name ?? 'Track'}
             grid={track.grid}
             setGrid={(grid) => {
@@ -114,6 +119,9 @@ export const SequencerContext = React.createContext<SequencerState>({
       throw new Error('SequencerContext not initialized.');
     },
     updateInstrumentSettings: () => {
+      throw new Error('SequencerContext not initialized.');
+    },
+    getTrack: () => {
       throw new Error('SequencerContext not initialized.');
     },
   },

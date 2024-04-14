@@ -13,6 +13,7 @@ export type PlayableInstrument<N extends string> = {
   updateSettings(settings: object): void;
   trigger(note: N, duration: Subdivision, time: number): void;
   dispose(): void;
+  node(): Tone.ToneAudioNode;
 };
 
 export interface GridScheduleSettings<N extends string> {

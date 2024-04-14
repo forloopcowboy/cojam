@@ -4,15 +4,16 @@ import { getNotes, UnknownTrackTypeError } from './TrackInitializationSettings.t
 import { NoteGrid, PlayableInstrument } from '../Song.ts';
 import { Note } from 'tone/build/esm/core/type/NoteUnits';
 import { TrackId } from './TrackSettings.ts';
-import { makeGrid } from '../SequencerGrid.tsx';
 import { copySynth } from '../DemoSynths.ts';
 import { Subdivision } from 'tone/build/esm/core/type/Units';
 import * as Tone from 'tone';
+import { ToneAudioNode } from 'tone';
 
 export interface GlobalTrackState {
   tracks: TrackState<string | Note>[];
   updateGrid(trackId: TrackId, grid: NoteGrid<string | Note>): void;
   updateInstrumentSettings(trackId: TrackId, settings: object): void;
+  getTrack(trackId: TrackId): TrackState<string | Note>;
 }
 
 export interface TrackState<Note extends string> {
@@ -49,7 +50,9 @@ export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackStat
           const syncedInstruments = initializeInstruments(track, syncedGrid, instruments.current);
 
           // Update settings of the managed instancessof Tone instruments
-          syncedInstruments.forEach((i) => i.updateSettings(track.type === 'synth' ? track.instrument : track.sources));
+          syncedInstruments.forEach((i) =>
+            i.updateSettings(track.type === 'synth' ? track.instrument : track.settings),
+          );
 
           return [track.id, { syncedGrid, syncedInstruments }];
         }),
@@ -83,6 +86,13 @@ export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackStat
         const thisInstrument = instruments.current[trackId];
         thisInstrument.forEach((i) => i.updateSettings(settings));
       },
+      getTrack(trackId: TrackId): TrackState<string | Note> {
+        return {
+          trackId,
+          grid: gridState[trackId],
+          instruments: instruments.current[trackId],
+        };
+      },
     };
   }, [hasChanged]);
 }
@@ -113,6 +123,33 @@ function initializeGrid(
   return cache[id];
 }
 
+/**
+ * Builds a 2D array, where the first dimension represents the rows (notes) of the grid,
+ * and the second dimension represents the columns, mapping to a specific time.
+ * @param notes Notes to be ordered in the grid
+ * @param columns Number of columns in the grid
+ */
+export function makeGrid<N extends string>(notes: N[], columns = 8): NoteGrid<N> {
+  const rows = [];
+
+  for (const note of notes) {
+    const row = [];
+    // each subarray contains multiple objects that have an assigned note
+    // and a boolean to flag whether they are active.
+    // each element in the subarray corresponds to one eighth note.
+    for (let i = 0; i < columns; i++) {
+      row.push({
+        note: note,
+        isActive: false,
+      });
+    }
+    rows.push(row);
+  }
+
+  // we now have 6 rows each containing 8 eighth notes
+  return rows;
+}
+
 function initializeInstruments(
   track: AnyTrackSettings,
   grid: NoteGrid<string>,
@@ -132,6 +169,9 @@ function initializeInstruments(
         dispose() {
           synth.dispose();
         },
+        node(): ToneAudioNode {
+          return synth;
+        },
       }));
     } else if (track.type === 'audio-source') {
       const players = new Tone.Players(track.sources).toDestination();
@@ -149,6 +189,9 @@ function initializeInstruments(
         },
         dispose() {
           players.player(src).dispose();
+        },
+        node(): ToneAudioNode {
+          return players.player(src);
         },
       }));
     } else throw new UnknownTrackTypeError(track['type'] ?? `undefined`);
@@ -179,12 +222,15 @@ function initializeInstruments(
             dispose() {
               synth.dispose();
             },
+            node(): ToneAudioNode {
+              return synth;
+            },
           })),
         ];
       } else if (track.type === 'audio-source') {
         // Dispose previous
         instruments.forEach((i) => i.dispose());
-        let newPlayers = new Tone.Players(track.sources).toDestination();
+        const newPlayers = new Tone.Players(track.sources).toDestination();
         cache[id] = Object.keys(track.sources).map((src) => ({
           trigger(note: Note, duration: Subdivision, time: number): void {
             newPlayers
@@ -199,6 +245,9 @@ function initializeInstruments(
           },
           dispose() {
             newPlayers.player(src).dispose();
+          },
+          node(): ToneAudioNode {
+            return newPlayers;
           },
         }));
       }
