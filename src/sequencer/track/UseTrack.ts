@@ -1,13 +1,7 @@
-import { initializeSynthTrack, SynthTrackSettings } from './SynthTrack.ts';
+import { initializeSynthTrack } from './SynthTrack.ts';
 import { useEffect, useState } from 'react';
-import * as Tone from 'tone';
-import { copySynth } from '../DemoSynths.ts';
-import { makeGrid } from '../SequencerGrid.tsx';
-import { NoteGrid, scheduleGrid } from '../Song.ts';
-import { AnyTrackSettings, InitializedTrackSetting } from './track.index.ts';
-import { AudioSourceTrackSettings, initializeAudioSourceTrack } from './AudioSourceTrack.ts';
-import { Note } from 'tone/build/esm/core/type/NoteUnits';
-import { Subdivision } from 'tone/build/esm/core/type/Units';
+import { AnyTrackSettings } from './track.index.ts';
+import { initializeAudioSourceTrack } from './AudioSourceTrack.ts';
 import DisposeFunction from '../../utils/DisposeFunction.ts';
 import { AnyInitializedTrackSettings, UnknownTrackTypeError } from './TrackInitializationSettings.ts';
 

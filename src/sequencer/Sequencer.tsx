@@ -9,18 +9,21 @@ import kick from '../assets/audio/demo-drums/demo_drums_kick.wav';
 import snare from '../assets/audio/demo-drums/demo_drums_snare.wav';
 import hihat from '../assets/audio/demo-drums/demo_drums_hi_hat.wav';
 import { AnyInitializedTrackSettings, getNotes } from './track/TrackInitializationSettings.ts';
+import { buildScale, scales } from './Scales.ts';
+import { sortNotes } from '../utils/note-order.ts';
 
 function Sequencer() {
   const [started, setStarted] = useState(false);
   const [playing, setPlaying] = useState(false);
+
+  const scale = sortNotes(buildScale('C4', scales.Dorian));
 
   const trackState = useTrack(
     {
       name: 'square8 synth',
       type: 'synth',
       instrument: { oscillator: { type: 'square8' } },
-      // C pentatonic minor
-      notes: ['C4', 'D4', 'E4', 'G4', 'A4'],
+      notes: scale,
     },
     {
       name: 'demo drums',
@@ -45,8 +48,7 @@ function Sequencer() {
           type: 'custom',
         },
       },
-      // C pentatonic minor
-      notes: ['C4', 'D4', 'E4', 'G4', 'A4'],
+      notes: scale,
     },
   );
 
