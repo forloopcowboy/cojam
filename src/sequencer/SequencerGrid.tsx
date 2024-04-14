@@ -3,6 +3,7 @@ import classNames from '../utils/class-names.ts';
 import { NoteGrid } from './Song.ts';
 
 export interface SequencerGridProps {
+  name: string;
   notes: Note[];
   grid: NoteGrid;
   setGrid: (grid: NoteGrid) => void;
@@ -13,7 +14,8 @@ function SequencerGrid(props: SequencerGridProps) {
   const { grid, setGrid } = props;
 
   return (
-    <>
+    <div className="rounded-2xl bg-gray-500 px-10 pb-10">
+      <h2 className="my-5 text-2xl font-bold text-gray-darker">{props.name}</h2>
       <div className="grid gap-1">
         {grid.map((row, rowIndex) => (
           <div
@@ -44,7 +46,7 @@ function SequencerGrid(props: SequencerGridProps) {
           </div>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 

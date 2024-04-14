@@ -8,12 +8,30 @@ function Sequencer() {
   const [started, setStarted] = useState(false);
   const [playing, setPlaying] = useState(false);
 
-  const trackState = useTrack({
-    name: 'Synth',
-    instrument: { oscillator: { type: 'square8' } },
-    // C pentatonic minor
-    notes: ['C4', 'D4', 'E4', 'G4', 'A4'],
-  });
+  const trackState = useTrack(
+    {
+      name: 'square8',
+      instrument: { oscillator: { type: 'square8' } },
+      // C pentatonic minor
+      notes: ['C4', 'D4', 'E4', 'G4', 'A4'],
+    },
+    {
+      name: 'Synth',
+      instrument: {
+        oscillator: {
+          mute: false,
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-expect-error
+          partialCount: 3,
+          partials: [0.31640625, 0.152587890625, -0.09006327390670776],
+          phase: 0,
+          type: 'custom',
+        },
+      },
+      // C pentatonic minor
+      notes: ['C4', 'D4', 'E4', 'G4', 'A4'],
+    },
+  );
 
   const handleClick = useCallback(() => {
     if (!started) {
@@ -42,6 +60,7 @@ function Sequencer() {
         {trackState.tracks.map((track, idx) => (
           <SequencerGrid
             key={idx}
+            name={track.name ?? 'Track'}
             grid={track.grid}
             setGrid={(grid) => {
               const settings = trackState.tracks[idx];
