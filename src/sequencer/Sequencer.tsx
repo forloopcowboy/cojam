@@ -2,7 +2,7 @@ import SequencerGrid from './SequencerGrid.tsx';
 import React, { useCallback, useState } from 'react';
 import * as Tone from 'tone';
 import BigButton from '../components/buttons/BigButton.tsx';
-import useTrack from './track/UseTrack.ts';
+import useTrack, { GlobalTrackState } from './track/UseTrack.ts';
 
 // Import audio sources
 import kick from '../assets/audio/demo-drums/demo_drums_kick.wav';
@@ -12,7 +12,7 @@ import { getNotes } from './track/TrackInitializationSettings.ts';
 import { buildScale, scales } from './Scales.ts';
 import { sortNotes } from '../utils/note-order.ts';
 import { AnyTrackSettings } from './track/track.index.ts';
-import {scheduleGrid} from "./Song.ts";
+import { scheduleGrid } from './Song.ts';
 
 function Sequencer() {
   const scale = sortNotes(buildScale('C4', scales.Dorian));
@@ -56,7 +56,7 @@ function Sequencer() {
     },
   });
 
-  const trackState = useTrack(...Object.values(trackSettings));
+  const globalTrackState = useTrack(...Object.values(trackSettings));
 
   const handleClick = useCallback(() => {
     if (!started) {
@@ -66,9 +66,11 @@ function Sequencer() {
       Tone.start();
       Tone.getDestination().volume.rampTo(-10, 0.001);
 
-      const ids = trackState.tracks.forEach((track) => {
-        return scheduleGrid({ grid: track.grid, instruments: track.instrument});
-      }
+      const ids = globalTrackState.tracks.map((track) => {
+        return scheduleGrid({ grid: track.grid, instruments: track.instruments });
+      });
+
+      console.log(`Scheduled ${ids.length} loops: ${ids.join(', ')}`);
 
       setStarted(true);
     }
@@ -81,19 +83,19 @@ function Sequencer() {
       Tone.Transport.start();
       setPlaying(true);
     }
-  }, [playing, started]);
+  }, [playing, started, globalTrackState.tracks]);
 
   return (
-    <SequencerContext.Provider value={{ started, playing }}>
+    <SequencerContext.Provider value={{ started, playing, globalTrackState }}>
       <BigButton onClick={handleClick}>{playing ? 'Stop' : 'Play'}</BigButton>
       <div className="flex h-full w-full flex-col gap-2 text-gray-200">
-        {trackState.tracks.map((track, idx) => (
+        {globalTrackState.tracks.map((track, idx) => (
           <SequencerGrid
             key={idx}
             name={trackSettings[track.trackId].name ?? 'Track'}
             grid={track.grid}
             setGrid={(grid) => {
-              trackState.updateGrid(track.trackId, grid);
+              globalTrackState.updateGrid(track.trackId, grid);
             }}
             notes={getNotes(trackSettings[track.trackId])}
           />
@@ -106,11 +108,21 @@ function Sequencer() {
 export const SequencerContext = React.createContext<SequencerState>({
   started: false,
   playing: false,
+  globalTrackState: {
+    tracks: [],
+    updateGrid: () => {
+      throw new Error('SequencerContext not initialized.');
+    },
+    updateInstrumentSettings: () => {
+      throw new Error('SequencerContext not initialized.');
+    },
+  },
 });
 
 export interface SequencerState {
   started: boolean;
   playing: boolean;
+  globalTrackState: GlobalTrackState;
 }
 
 export type SequencerPosition = [number, number, number];

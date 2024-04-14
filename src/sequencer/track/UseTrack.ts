@@ -18,13 +18,13 @@ export interface GlobalTrackState {
 export interface TrackState<Note extends string> {
   trackId: TrackId;
   grid: NoteGrid<Note>;
-  instrument: PlayableInstrument<Note>;
+  instruments: PlayableInstrument<Note>[];
 }
 
 type TrackCache<T> = Record<TrackId, T>;
 
 export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackState {
-  const instruments = useRef<TrackCache<PlayableInstrument<string>>>({});
+  const instruments = useRef<TrackCache<PlayableInstrument<string>[]>>({});
   const [gridState, setGrids] = useState<TrackCache<NoteGrid<string | Note>>>(
     {} as TrackCache<NoteGrid<string | Note>>,
   );
@@ -49,7 +49,7 @@ export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackStat
           const syncedInstruments = initializeInstruments(track, syncedGrid, instruments.current);
 
           // Update settings of the managed instancessof Tone instruments
-          syncedInstruments.updateSettings(track.type === 'synth' ? track.instrument : track.sources);
+          syncedInstruments.forEach((i) => i.updateSettings(track.type === 'synth' ? track.instrument : track.sources));
 
           return [track.id, { syncedGrid, syncedInstruments }];
         }),
@@ -66,12 +66,11 @@ export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackStat
     return {
       tracks: tracks.map((track) => {
         const grid = state[track.id].syncedGrid;
-        const instrument = instruments.current[track.id];
 
         return {
           trackId: track.id,
           grid,
-          instrument,
+          instruments: instruments.current[track.id],
         };
       }),
       updateGrid(trackId: TrackId, grid: NoteGrid<string | Note>): void {
@@ -81,8 +80,8 @@ export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackStat
         });
       },
       updateInstrumentSettings(trackId: TrackId, settings: object): void {
-        const instrument = instruments.current[trackId];
-        instrument.updateSettings(settings);
+        const thisInstrument = instruments.current[trackId];
+        thisInstrument.forEach((i) => i.updateSettings(settings));
       },
     };
   }, [hasChanged]);
@@ -117,23 +116,23 @@ function initializeGrid(
 function initializeInstruments(
   track: AnyTrackSettings,
   grid: NoteGrid<string>,
-  cache: TrackCache<PlayableInstrument<string | Note>>,
-): PlayableInstrument<string | Note> {
+  cache: TrackCache<PlayableInstrument<string | Note>[]>,
+): PlayableInstrument<string | Note>[] {
   const { id } = track;
   if (!cache[id]) {
     if (track.type === 'synth') {
       const synths = copySynth(grid.length, track.instrument);
-      cache[id] = {
+      cache[id] = synths.map((synth) => ({
         trigger(note: Note, duration: Subdivision, time: number): void {
-          synths.forEach((synth) => synth.triggerAttackRelease(note, duration, time));
+          synth.triggerAttackRelease(note, duration, time);
         },
         updateSettings(settings: object): void {
-          synths.forEach((synth) => synth.set(settings));
+          synth.set(settings as Tone.SynthOptions);
         },
-      };
+      }));
     } else if (track.type === 'audio-source') {
       let players = new Tone.Players(track.sources).toDestination();
-      cache[id] = {
+      cache[id] = Object.keys(track.sources).map(() => ({
         trigger(note: Note, duration: Subdivision, time: number): void {
           players
             .player(note)
@@ -149,7 +148,7 @@ function initializeInstruments(
             players = new Tone.Players(newSources).toDestination();
           }
         },
-      };
+      }));
     } else throw new UnknownTrackTypeError(track['type'] ?? `undefined`);
   }
 
