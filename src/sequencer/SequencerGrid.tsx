@@ -1,8 +1,15 @@
 import classNames from '../utils/class-names.ts';
 import { NoteGrid } from './Song.ts';
+import { PopoverButton } from '../components/buttons/PopoverButton.tsx';
+import { Cog8ToothIcon } from '@heroicons/react/24/solid';
+import { useContext, useId } from 'react';
+import { SequencerContext } from './Sequencer.tsx';
+import { TrackId } from './track/TrackSettings.ts';
+import { Players, Synth } from 'tone';
 
 export interface SequencerGridProps<N extends string> {
   name: string;
+  trackId: TrackId;
   notes: N[];
   grid: NoteGrid<N>;
   setGrid: (grid: NoteGrid<N>) => void;
@@ -10,11 +17,53 @@ export interface SequencerGridProps<N extends string> {
 
 /** Renders a sequencer grid, containing specified notes & columns */
 function SequencerGrid<Note extends string>(props: SequencerGridProps<Note>) {
+  const context = useContext(SequencerContext);
   const { grid, setGrid } = props;
+  const id = useId();
+  const settings = (context.globalTrackState.getTrack(props.trackId).instruments[0]?.node() as Synth | Players).get();
+  const volume = settings.volume;
+  const mute = 'mute' in settings ? settings.mute : undefined;
 
   return (
     <div className="rounded-2xl bg-gray-500 px-10 pb-10">
-      <h2 className="my-5 text-2xl font-bold text-gray-darker">{props.name}</h2>
+      <div className="flex items-center gap-2">
+        <h2 className="my-5 text-2xl font-bold text-gray-darker">{props.name}</h2>
+        <PopoverButton
+          button={<Cog8ToothIcon className="aspect-square h-6 w-6" />}
+          panelClassName="rounded-lg overflow-scroll bg-gray-800 text-white w-fit"
+        >
+          <div className="grid grid-cols-[1fr_3fr] items-center gap-3">
+            {mute !== undefined && (
+              <>
+                <label htmlFor={`mute-${id}`}>Mute</label>
+                <input
+                  id={`mute-${id}`}
+                  type="checkbox"
+                  defaultChecked={mute}
+                  onChange={(e) => {
+                    context.globalTrackState.updateInstrumentSettings(props.trackId, {
+                      mute: e.target.checked,
+                    });
+                  }}
+                />
+              </>
+            )}
+            <label htmlFor={`volume-${id}`}>Volume</label>
+            <input
+              id={`volume-${id}`}
+              type="range"
+              min="-60"
+              max="5"
+              defaultValue={volume}
+              onChange={(e) => {
+                context.globalTrackState.updateInstrumentSettings(props.trackId, {
+                  volume: parseFloat(e.target.value),
+                });
+              }}
+            />
+          </div>
+        </PopoverButton>
+      </div>
       <div className="grid gap-1">
         {grid.map((row, rowIndex) => (
           <div
@@ -47,33 +96,6 @@ function SequencerGrid<Note extends string>(props: SequencerGridProps<Note>) {
       </div>
     </div>
   );
-}
-
-/**
- * Builds a 2D array, where the first dimension represents the rows (notes) of the grid,
- * and the second dimension represents the columns, mapping to a specific time.
- * @param notes Notes to be ordered in the grid
- * @param columns Number of columns in the grid
- */
-export function makeGrid<N extends string>(notes: N[], columns = 8): NoteGrid<N> {
-  const rows = [];
-
-  for (const note of notes) {
-    const row = [];
-    // each subarray contains multiple objects that have an assigned note
-    // and a boolean to flag whether they are active.
-    // each element in the subarray corresponds to one eighth note.
-    for (let i = 0; i < columns; i++) {
-      row.push({
-        note: note,
-        isActive: false,
-      });
-    }
-    rows.push(row);
-  }
-
-  // we now have 6 rows each containing 8 eighth notes
-  return rows;
 }
 
 export default SequencerGrid;

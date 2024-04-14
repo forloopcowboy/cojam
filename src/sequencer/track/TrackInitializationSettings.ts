@@ -2,6 +2,7 @@ import { SynthTrackSettings } from './SynthTrack.ts';
 import { AudioSourceTrackSettings } from './AudioSourceTrack.ts';
 import { NoteGrid } from '../Song.ts';
 import { Note } from 'tone/build/esm/core/type/NoteUnits';
+import { AnyTrackSettings } from './track.index.ts';
 
 export type InitializedTrackSetting<
   Settings extends SynthTrackSettings | AudioSourceTrackSettings<string>,
@@ -12,7 +13,7 @@ export type InitializedTrackSetting<
 
 /** Returns notes of a given track.
  *  @throws {UnknownTrackTypeError} if track type is unsupported. */
-export function getNotes(settings: AnyInitializedTrackSettings): string[] {
+export function getNotes(settings: AnyTrackSettings): string[] {
   if (settings.type === 'synth') {
     return settings.notes;
   } else if (settings.type === 'audio-source') {

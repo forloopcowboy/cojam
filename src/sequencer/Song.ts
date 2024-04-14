@@ -9,7 +9,11 @@ export type NoteBlock<N extends string> = {
 export type NoteGrid<N extends string> = NoteBlock<N>[][];
 
 export type PlayableInstrument<N extends string> = {
+  /** Sets settings partial */
+  updateSettings(settings: object): void;
   trigger(note: N, duration: Subdivision, time: number): void;
+  dispose(): void;
+  node(): Tone.ToneAudioNode;
 };
 
 export interface GridScheduleSettings<N extends string> {
