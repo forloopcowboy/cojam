@@ -8,24 +8,27 @@ import useTrack from './track/UseTrack.ts';
 import kick from '../assets/audio/demo-drums/demo_drums_kick.wav';
 import snare from '../assets/audio/demo-drums/demo_drums_snare.wav';
 import hihat from '../assets/audio/demo-drums/demo_drums_hi_hat.wav';
-import { AnyInitializedTrackSettings, getNotes } from './track/TrackInitializationSettings.ts';
+import { getNotes } from './track/TrackInitializationSettings.ts';
 import { buildScale, scales } from './Scales.ts';
 import { sortNotes } from '../utils/note-order.ts';
+import { AnyTrackSettings } from './track/track.index.ts';
+import {scheduleGrid} from "./Song.ts";
 
 function Sequencer() {
-  const [started, setStarted] = useState(false);
-  const [playing, setPlaying] = useState(false);
-
   const scale = sortNotes(buildScale('C4', scales.Dorian));
 
-  const trackState = useTrack(
-    {
+  const [started, setStarted] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [trackSettings] = useState<Record<string, AnyTrackSettings>>({
+    'square8 synth': {
+      id: 'square8 synth',
       name: 'square8 synth',
       type: 'synth',
       instrument: { oscillator: { type: 'square8' } },
       notes: scale,
     },
-    {
+    'demo drums': {
+      id: 'demo drums',
       name: 'demo drums',
       type: 'audio-source',
       sources: {
@@ -34,7 +37,8 @@ function Sequencer() {
         hihat: hihat,
       },
     },
-    {
+    'custom synth': {
+      id: 'custom synth',
       name: 'custom synth',
       type: 'synth',
       instrument: {
@@ -50,7 +54,9 @@ function Sequencer() {
       },
       notes: scale,
     },
-  );
+  });
+
+  const trackState = useTrack(...Object.values(trackSettings));
 
   const handleClick = useCallback(() => {
     if (!started) {
@@ -59,6 +65,11 @@ function Sequencer() {
 
       Tone.start();
       Tone.getDestination().volume.rampTo(-10, 0.001);
+
+      const ids = trackState.tracks.forEach((track) => {
+        return scheduleGrid({ grid: track.grid, instruments: track.instrument});
+      }
+
       setStarted(true);
     }
 
@@ -79,13 +90,12 @@ function Sequencer() {
         {trackState.tracks.map((track, idx) => (
           <SequencerGrid
             key={idx}
-            name={track.name ?? 'Track'}
+            name={trackSettings[track.trackId].name ?? 'Track'}
             grid={track.grid}
             setGrid={(grid) => {
-              const settings = trackState.tracks[idx];
-              trackState.updateTrack(idx, { ...settings, grid: grid } as AnyInitializedTrackSettings);
+              trackState.updateGrid(track.trackId, grid);
             }}
-            notes={getNotes(track)}
+            notes={getNotes(trackSettings[track.trackId])}
           />
         ))}
       </div>
