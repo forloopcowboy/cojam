@@ -1,18 +1,20 @@
-import { Instrument, InstrumentOptions } from 'tone/build/esm/instrument/Instrument';
-import { Note } from 'tone/build/esm/core/type/NoteUnits';
 import * as Tone from 'tone';
 import { Subdivision } from 'tone/build/esm/core/type/Units';
 
-export type NoteBlock = {
-  note: Note;
+export type NoteBlock<N extends string> = {
+  note: N;
   isActive: boolean;
 };
 
-export type NoteGrid = NoteBlock[][];
+export type NoteGrid<N extends string> = NoteBlock<N>[][];
 
-export interface GridScheduleSettings<Options extends InstrumentOptions> {
-  grid: NoteGrid;
-  instruments: Array<Instrument<Options>>;
+export type PlayableInstrument<N extends string> = {
+  trigger(note: N, duration: Subdivision, time: number): void;
+};
+
+export interface GridScheduleSettings<N extends string> {
+  grid: NoteGrid<N>;
+  instruments: Array<PlayableInstrument<N>>;
   bpm?: number;
 }
 
@@ -22,7 +24,7 @@ export interface GridScheduleSettings<Options extends InstrumentOptions> {
  * @param settings Object that specifies the grid, instruments, and BPM.
  * @throws MisalignedInstrumentError if the number of rows in the grid does not match the number of instruments.
  */
-export function scheduleGrid<Options extends InstrumentOptions>(settings: GridScheduleSettings<Options>): number {
+export function scheduleGrid<N extends string>(settings: GridScheduleSettings<N>): number {
   let beat = 0;
 
   if (settings.grid.length !== settings.instruments.length) {
@@ -39,7 +41,7 @@ export function scheduleGrid<Options extends InstrumentOptions>(settings: GridSc
       const note = row[beat];
 
       if (note.isActive) {
-        instrument.triggerAttackRelease(note.note, noteDuration, time);
+        instrument.trigger(note.note, noteDuration, time);
       }
     });
 

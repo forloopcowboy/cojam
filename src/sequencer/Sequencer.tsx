@@ -2,7 +2,13 @@ import SequencerGrid from './SequencerGrid.tsx';
 import React, { useCallback, useState } from 'react';
 import * as Tone from 'tone';
 import BigButton from '../components/buttons/BigButton.tsx';
-import useTrack from './UseTrack.ts';
+import useTrack from './track/UseTrack.ts';
+
+// Import audio sources
+import kick from '../assets/audio/demo-drums/demo_drums_kick.wav';
+import snare from '../assets/audio/demo-drums/demo_drums_snare.wav';
+import hihat from '../assets/audio/demo-drums/demo_drums_hi_hat.wav';
+import { AnyInitializedTrackSettings, getNotes } from './track/TrackInitializationSettings.ts';
 
 function Sequencer() {
   const [started, setStarted] = useState(false);
@@ -10,13 +16,24 @@ function Sequencer() {
 
   const trackState = useTrack(
     {
-      name: 'square8',
+      name: 'square8 synth',
+      type: 'synth',
       instrument: { oscillator: { type: 'square8' } },
       // C pentatonic minor
       notes: ['C4', 'D4', 'E4', 'G4', 'A4'],
     },
     {
-      name: 'Synth',
+      name: 'demo drums',
+      type: 'audio-source',
+      sources: {
+        kick: kick,
+        snare: snare,
+        hihat: hihat,
+      },
+    },
+    {
+      name: 'custom synth',
+      type: 'synth',
       instrument: {
         oscillator: {
           mute: false,
@@ -64,9 +81,9 @@ function Sequencer() {
             grid={track.grid}
             setGrid={(grid) => {
               const settings = trackState.tracks[idx];
-              trackState.updateTrack(idx, { ...settings, grid: grid });
+              trackState.updateTrack(idx, { ...settings, grid: grid } as AnyInitializedTrackSettings);
             }}
-            notes={track.notes}
+            notes={getNotes(track)}
           />
         ))}
       </div>

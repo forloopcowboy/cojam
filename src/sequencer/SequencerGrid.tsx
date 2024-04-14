@@ -1,16 +1,15 @@
-import { Note } from 'tone/build/esm/core/type/NoteUnits';
 import classNames from '../utils/class-names.ts';
 import { NoteGrid } from './Song.ts';
 
-export interface SequencerGridProps {
+export interface SequencerGridProps<N extends string> {
   name: string;
-  notes: Note[];
-  grid: NoteGrid;
-  setGrid: (grid: NoteGrid) => void;
+  notes: N[];
+  grid: NoteGrid<N>;
+  setGrid: (grid: NoteGrid<N>) => void;
 }
 
 /** Renders a sequencer grid, containing specified notes & columns */
-function SequencerGrid(props: SequencerGridProps) {
+function SequencerGrid<Note extends string>(props: SequencerGridProps<Note>) {
   const { grid, setGrid } = props;
 
   return (
@@ -56,7 +55,7 @@ function SequencerGrid(props: SequencerGridProps) {
  * @param notes Notes to be ordered in the grid
  * @param columns Number of columns in the grid
  */
-export function makeGrid(notes: Note[], columns = 8): NoteGrid {
+export function makeGrid<N extends string>(notes: N[], columns = 8): NoteGrid<N> {
   const rows = [];
 
   for (const note of notes) {
