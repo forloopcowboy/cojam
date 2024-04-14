@@ -129,10 +129,13 @@ function initializeInstruments(
         updateSettings(settings: object): void {
           synth.set(settings as Tone.SynthOptions);
         },
+        dispose() {
+          synth.dispose();
+        },
       }));
     } else if (track.type === 'audio-source') {
       let players = new Tone.Players(track.sources).toDestination();
-      cache[id] = Object.keys(track.sources).map(() => ({
+      cache[id] = Object.keys(track.sources).map((src) => ({
         trigger(note: Note, duration: Subdivision, time: number): void {
           players
             .player(note)
@@ -148,8 +151,66 @@ function initializeInstruments(
             players = new Tone.Players(newSources).toDestination();
           }
         },
+        dispose() {
+          players.player(src).dispose();
+        },
       }));
     } else throw new UnknownTrackTypeError(track['type'] ?? `undefined`);
+  }
+
+  // If cache exists, deal with difference in grid length
+  const instruments = cache[id];
+
+  if (instruments.length !== grid.length) {
+    // Dispose excess if necessary
+    if (instruments.length > grid.length) {
+      for (let i = grid.length; i < instruments.length; i++) instruments[i].dispose();
+      cache[id] = instruments.slice(0, grid.length);
+    }
+    // Instantiate more if necessary
+    else {
+      if (track.type === 'synth') {
+        const synths = copySynth(grid.length - instruments.length, track.instrument);
+        cache[id] = [
+          ...instruments,
+          ...synths.map((synth) => ({
+            trigger(note: Note, duration: Subdivision, time: number): void {
+              synth.triggerAttackRelease(note, duration, time);
+            },
+            updateSettings(settings: object): void {
+              synth.set(settings as Tone.SynthOptions);
+            },
+            dispose() {
+              synth.dispose();
+            },
+          })),
+        ];
+      } else if (track.type === 'audio-source') {
+        // Dispose previous
+        instruments.forEach((i) => i.dispose());
+        let newPlayers = new Tone.Players(track.sources).toDestination();
+        cache[id] = Object.keys(track.sources).map((src) => ({
+          trigger(note: Note, duration: Subdivision, time: number): void {
+            newPlayers
+              .player(note)
+              .start(time)
+              .stop(Tone.Time(duration).toSeconds() + time);
+          },
+          updateSettings(settings: object): void {
+            const newSources = settings as Record<string, string>;
+            const hasChanged = Object.keys(newSources).some((key) => newSources[key] !== track.sources[key]);
+
+            if (hasChanged) {
+              newPlayers.dispose();
+              newPlayers = new Tone.Players(newSources).toDestination();
+            }
+          },
+          dispose() {
+            newPlayers.player(src).dispose();
+          },
+        }));
+      }
+    }
   }
 
   return cache[id];
