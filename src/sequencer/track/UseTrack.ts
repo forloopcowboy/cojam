@@ -134,7 +134,7 @@ function initializeInstruments(
         },
       }));
     } else if (track.type === 'audio-source') {
-      let players = new Tone.Players(track.sources).toDestination();
+      const players = new Tone.Players(track.sources).toDestination();
       cache[id] = Object.keys(track.sources).map((src) => ({
         trigger(note: Note, duration: Subdivision, time: number): void {
           players
@@ -143,13 +143,9 @@ function initializeInstruments(
             .stop(Tone.Time(duration).toSeconds() + time);
         },
         updateSettings(settings: object): void {
-          const newSources = settings as Record<string, string>;
-          const hasChanged = Object.keys(newSources).some((key) => newSources[key] !== track.sources[key]);
-
-          if (hasChanged) {
-            players.dispose();
-            players = new Tone.Players(newSources).toDestination();
-          }
+          Object.keys(track.sources).forEach((key) => {
+            players.player(key).set(settings);
+          });
         },
         dispose() {
           players.player(src).dispose();
@@ -197,13 +193,9 @@ function initializeInstruments(
               .stop(Tone.Time(duration).toSeconds() + time);
           },
           updateSettings(settings: object): void {
-            const newSources = settings as Record<string, string>;
-            const hasChanged = Object.keys(newSources).some((key) => newSources[key] !== track.sources[key]);
-
-            if (hasChanged) {
-              newPlayers.dispose();
-              newPlayers = new Tone.Players(newSources).toDestination();
-            }
+            Object.keys(track.sources).forEach((key) => {
+              newPlayers.player(key).set(settings);
+            });
           },
           dispose() {
             newPlayers.player(src).dispose();
