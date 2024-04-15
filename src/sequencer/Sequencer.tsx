@@ -71,7 +71,7 @@ function Sequencer() {
       Tone.getDestination().volume.rampTo(-10, 0.001);
 
       const ids = globalTrackState.tracks.map((track) => {
-        return scheduleGrid({ grid: track.grid, instruments: track.instruments });
+        return scheduleGrid({ grids: [track.grid], instruments: track.instruments });
       });
 
       console.log(`Scheduled ${ids.length} loops: ${ids.join(', ')}`);

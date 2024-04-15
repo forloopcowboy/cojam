@@ -67,6 +67,7 @@ export default function useTrack(...tracks: AnyTrackSettings[]): GlobalTrackStat
 
   // Sync the updated grids with the state
   useEffect(() => {
+    console.log('State changed – updating grids');
     setGrids(Object.fromEntries(Object.entries(state).map(([id, { syncedGrid }]) => [id, syncedGrid])));
   }, [JSON.stringify(state)]);
 
