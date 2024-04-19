@@ -51,32 +51,48 @@ function buildLoops<N extends string>(
   onPositionChange: (position: { loop: number; beat: number }) => void,
 ): Tone.Loop[] {
   return grids.map((grid: NoteGrid<N>, index) => {
-    let gridBeat = 0;
-
-    if (!grid.every((row) => row.length === grid[0].length)) {
-      throw new Error('Grid rows must have the same length. Otherwise the grid is not rectangular. Think!');
-    }
-
-    const gridSubdivisions = grid[0].length;
-    const noteDuration = `${gridSubdivisions}n` as Subdivision;
-
-    function repeat(time: number) {
-      grid.forEach((row, rowIdx) => {
-        const instrument = instruments[rowIdx];
-        const note = row[gridBeat];
-
-        if (note.isActive) {
-          instrument.trigger(note.note, noteDuration, time);
-        }
-      });
-
-      // Increment beat
-      gridBeat = (gridBeat + 1) % gridSubdivisions;
-      onPositionChange({ loop: index, beat: gridBeat });
-    }
+    const repeat = buildRepeater(grid, instruments, index, onPositionChange);
 
     return new Tone.Loop(repeat, `${grid[0].length}n`);
   });
+}
+
+/**
+ * Builds a repeater function that plays a row of notes.
+ * You can assign this as the callback to a Tone.Loop instance to update the grid and instruments
+ * without having to reinitialize the global track.
+ */
+function buildRepeater<N extends string>(
+  grid: NoteGrid<N>,
+  instruments: PlayableInstrument<N>[],
+  index: number,
+  onPositionChange: (position: { loop: number; beat: number }) => void,
+): (time: number) => void {
+  let gridBeat = 0;
+
+  if (!grid.every((row) => row.length === grid[0].length)) {
+    throw new Error('Grid rows must have the same length. Otherwise the grid is not rectangular. Think!');
+  }
+
+  const gridSubdivisions = grid[0].length;
+  const noteDuration = `${gridSubdivisions}n` as Subdivision;
+
+  function repeat(time: number) {
+    grid.forEach((row, rowIdx) => {
+      const note = row[gridBeat];
+      const instrument = instruments[rowIdx];
+
+      if (note.isActive) {
+        instrument.trigger(note.note, noteDuration, time);
+      }
+    });
+
+    // Increment beat
+    gridBeat = (gridBeat + 1) % gridSubdivisions;
+    onPositionChange({ loop: index, beat: gridBeat });
+  }
+
+  return repeat;
 }
 
 /** Schedules a grid of notes to be played by a set of instruments.
