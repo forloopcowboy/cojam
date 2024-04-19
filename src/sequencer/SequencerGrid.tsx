@@ -11,6 +11,7 @@ export interface SequencerGridProps<N extends string> {
   name: string;
   trackId: TrackId;
   notes: N[];
+  gridIndex: number;
   grid: NoteGrid<N>;
   setGrid: (grid: NoteGrid<N>) => void;
 }
@@ -73,24 +74,37 @@ function SequencerGrid<Note extends string>(props: SequencerGridProps<Note>) {
               gridTemplateColumns: `repeat(${grid[0].length ?? 8}, minmax(0, 1fr))`,
             }}
           >
-            {row.map((block, columnIndex) => (
-              <button
-                key={columnIndex}
-                onClick={() => {
-                  const newGrid = [...grid];
-                  newGrid[rowIndex][columnIndex].isActive = !block.isActive;
-                  setGrid(newGrid);
-                }}
-                className={classNames(
-                  'h-full w-full rounded-lg p-5 transition-all duration-100',
-                  block.isActive
-                    ? 'bg-green-600 hover:bg-green-600/50'
-                    : 'bg-gray-600/50 text-transparent hover:bg-gray-600 hover:text-white',
-                )}
-              >
-                <span>{block.note}</span>
-              </button>
-            ))}
+            {row.map((block, columnIndex) => {
+              const isPlayingCurrentBlock =
+                context.gridPosition.beat === columnIndex && context.gridPosition.loop === props.gridIndex;
+              const activeColor = {
+                default: 'bg-green-600 duration-400 hover:bg-green-600/50',
+                playing: 'bg-blue-600 duration-100 hover:bg-blue-600/50',
+              };
+              const inactiveColor = {
+                default: 'bg-gray-600/50 duration-100 text-transparent hover:bg-gray-600 hover:text-white',
+                playing: 'bg-blue-200/50 duration-100 text-transparent hover:bg-gray-600 hover:text-white',
+              };
+
+              return (
+                <button
+                  key={columnIndex}
+                  onClick={() => {
+                    const newGrid = [...grid];
+                    newGrid[rowIndex][columnIndex].isActive = !block.isActive;
+                    setGrid(newGrid);
+                  }}
+                  className={classNames(
+                    'h-full w-full rounded-lg p-5 transition-all',
+                    block.isActive
+                      ? activeColor[isPlayingCurrentBlock ? 'playing' : 'default']
+                      : inactiveColor[isPlayingCurrentBlock ? 'playing' : 'default'],
+                  )}
+                >
+                  <span>{block.note}</span>
+                </button>
+              );
+            })}
           </div>
         ))}
       </div>

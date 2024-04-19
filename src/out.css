@@ -1106,6 +1106,15 @@ select {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
 }
 
+.bg-blue-200\/50 {
+  background-color: rgb(191 219 254 / 0.5);
+}
+
+.bg-blue-600 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(37 99 235 / var(--tw-bg-opacity));
+}
+
 .p-1 {
   padding: 0.25rem;
 }
@@ -1310,6 +1319,14 @@ select {
   transition-duration: 700ms;
 }
 
+.duration-500 {
+  transition-duration: 500ms;
+}
+
+.duration-1000 {
+  transition-duration: 1000ms;
+}
+
 .ease-in {
   transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
 }
@@ -1399,6 +1416,10 @@ body {
 
 .hover\:bg-green-600\/50:hover {
   background-color: rgb(22 163 74 / 0.5);
+}
+
+.hover\:bg-blue-600\/50:hover {
+  background-color: rgb(37 99 235 / 0.5);
 }
 
 .hover\:text-blue-900:hover {

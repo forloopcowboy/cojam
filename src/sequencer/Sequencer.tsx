@@ -12,7 +12,7 @@ import { getNotes } from './track/TrackInitializationSettings.ts';
 import { buildScale, scales } from './Scales.ts';
 import { shift, sortNotes } from '../utils/note-order.ts';
 import { AnyTrackSettings } from './track/track.index.ts';
-import { scheduleGrid } from './Song.ts';
+import { GridPosition, scheduleGrid } from './Song.ts';
 
 function Sequencer() {
   const scale = sortNotes(buildScale('C4', scales.Dorian));
@@ -61,6 +61,10 @@ function Sequencer() {
   });
 
   const globalTrackState = useTrack(...Object.values(trackSettings));
+  const [gridPosition, setGridPosition] = useState<GridPosition>({
+    loop: 0,
+    beat: 0,
+  });
 
   const handleClick = useCallback(() => {
     if (!started) {
@@ -71,7 +75,7 @@ function Sequencer() {
       Tone.getDestination().volume.rampTo(-10, 0.001);
 
       const ids = globalTrackState.tracks.map((track) => {
-        return scheduleGrid({ grids: [track.grid], instruments: track.instruments });
+        return scheduleGrid({ grids: [track.grid], instruments: track.instruments, onPositionChange: setGridPosition });
       });
 
       console.log(`Scheduled ${ids.length} loops: ${ids.join(', ')}`);
@@ -90,12 +94,13 @@ function Sequencer() {
   }, [playing, started, globalTrackState.tracks]);
 
   return (
-    <SequencerContext.Provider value={{ started, playing, globalTrackState }}>
+    <SequencerContext.Provider value={{ started, playing, globalTrackState, gridPosition }}>
       <BigButton onClick={handleClick}>{playing ? 'Stop' : 'Play'}</BigButton>
       <div className="flex h-full w-full flex-col gap-2 text-gray-200">
         {globalTrackState.tracks.map((track, idx) => (
           <SequencerGrid
             key={idx}
+            gridIndex={0}
             trackId={track.trackId}
             name={trackSettings[track.trackId].name ?? 'Track'}
             grid={track.grid}
@@ -125,12 +130,14 @@ export const SequencerContext = React.createContext<SequencerState>({
       throw new Error('SequencerContext not initialized.');
     },
   },
+  gridPosition: { loop: 0, beat: 0 },
 });
 
 export interface SequencerState {
   started: boolean;
   playing: boolean;
   globalTrackState: GlobalTrackState;
+  gridPosition: GridPosition;
 }
 
 export type SequencerPosition = [number, number, number];
