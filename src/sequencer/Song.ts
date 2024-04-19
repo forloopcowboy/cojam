@@ -27,10 +27,7 @@ export interface GridScheduleState {
   bpm: number;
   instruments: PlayableInstrument<string>[];
   globalTickId: number;
-  gridLoops: Array<{
-    loop: Tone.Loop;
-    grid: NoteGrid<string>;
-  }>;
+  gridLoops: Array<Tone.Loop>;
 }
 
 export interface GridPosition {
@@ -128,7 +125,7 @@ export function scheduleGrid<N extends string>(settings: GridScheduleSettings<N>
     bpm,
     instruments,
     globalTickId,
-    gridLoops: gridLoops.map((loop, idx) => ({ loop, grid: grids[idx] })),
+    gridLoops,
   };
 }
 

@@ -1,5 +1,5 @@
 import SequencerGrid from './SequencerGrid.tsx';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import * as Tone from 'tone';
 import BigButton from '../components/buttons/BigButton.tsx';
 import useTrack, { GlobalTrackState } from './track/UseTrack.ts';
@@ -12,7 +12,7 @@ import { getNotes } from './track/TrackInitializationSettings.ts';
 import { buildScale, scales } from './Scales.ts';
 import { shift, sortNotes } from '../utils/note-order.ts';
 import { AnyTrackSettings } from './track/track.index.ts';
-import { GridPosition, scheduleGrid } from './Song.ts';
+import { GridPosition, GridScheduleState, scheduleGrid } from './Song.ts';
 
 function Sequencer() {
   const scale = sortNotes(buildScale('C4', scales.Dorian));
@@ -60,11 +60,19 @@ function Sequencer() {
     },
   });
 
+  // Holds a reference to the scheduled loop instances
+  const gridScheduleState = useRef<GridScheduleState[]>([]);
   const globalTrackState = useTrack(...Object.values(trackSettings));
   const [gridPosition, setGridPosition] = useState<GridPosition>({
     loop: 0,
     beat: 0,
   });
+
+  // TODO: Add an effect to track grid additions and removals
+  // This effect will update the gridScheduleState.current array
+  // By either adding new loops that play the contents of the new grid(s)
+  // or disposing and removing loops that are no longer needed.
+  // All unchanged grids will have their callbacks rebuilt and updated.
 
   const handleClick = useCallback(() => {
     if (!started) {
@@ -74,9 +82,9 @@ function Sequencer() {
       Tone.start();
       Tone.getDestination().volume.rampTo(-10, 0.001);
 
-      const ids = globalTrackState.tracks.map((track) => {
+      const ids = (gridScheduleState.current = globalTrackState.tracks.map((track) => {
         return scheduleGrid({ grids: [track.grid], instruments: track.instruments, onPositionChange: setGridPosition });
-      });
+      }));
 
       console.log(`Scheduled ${ids.length} loops: ${ids.join(', ')}`);
 
