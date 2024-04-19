@@ -122,7 +122,6 @@ export function scheduleGrid<N extends string>(settings: GridScheduleSettings<N>
   const globalTickId = Tone.Transport.scheduleRepeat((time) => {
     gridLoops[loopIndex].start(time);
     loopIndex = (loopIndex + 1) % gridLoops.length;
-    settings.onPositionChange?.({ loop: loopIndex, beat: 0 });
   }, '1n');
 
   return {
